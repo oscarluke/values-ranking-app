@@ -1,18 +1,20 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { 
-  List, 
-  ListItem, 
-  ListItemText, 
-  Button, 
   Box, 
   Typography,
-  RadioGroup,
-  FormControlLabel,
-  Radio,
+  Button,
   Paper,
-  useTheme
+  useTheme,
+  LinearProgress,
+  Fade,
+  Slide,
+  IconButton
 } from '@mui/material';
 import { Value } from '../App';
+import { motion, AnimatePresence } from 'framer-motion';
+import StarIcon from '@mui/icons-material/Star';
+import StarBorderIcon from '@mui/icons-material/StarBorder';
+import StarHalfIcon from '@mui/icons-material/StarHalf';
 
 interface ValuesListProps {
   values: Value[];
@@ -22,150 +24,171 @@ interface ValuesListProps {
 
 const ValuesList: React.FC<ValuesListProps> = ({ values, onValueChange, onComplete }) => {
   const theme = useTheme();
+  const [currentIndex, setCurrentIndex] = useState(0);
   const allValuesRanked = values.every(value => value.importance !== null);
 
+  const handleRating = (importance: 'V' | 'Q' | 'N') => {
+    onValueChange(values[currentIndex].id, importance);
+    if (currentIndex < values.length - 1) {
+      setCurrentIndex(prev => prev + 1);
+    }
+  };
+
+  const progress = ((currentIndex + 1) / values.length) * 100;
+
   return (
-    <Box>
-      <Typography 
-        variant="h5" 
-        gutterBottom 
-        sx={{ 
-          color: theme.palette.primary.main,
-          mb: 3
-        }}
-      >
-        Rate each value as:
-      </Typography>
-      <Typography 
-        variant="body1" 
-        gutterBottom 
-        sx={{ 
-          color: theme.palette.text.secondary,
-          mb: 4
-        }}
-      >
-        V = Very important, Q = Quite important, N = Not so important
-      </Typography>
-      
-      <List sx={{ mb: 4 }}>
-        {values.map((value) => (
+    <Box sx={{ maxWidth: 600, mx: 'auto', px: 2 }}>
+      <Box sx={{ mb: 4 }}>
+        <Typography 
+          variant="h5" 
+          gutterBottom 
+          sx={{ 
+            color: theme.palette.primary.main,
+            mb: 2
+          }}
+        >
+          Rate each value as:
+        </Typography>
+        <Typography 
+          variant="body1" 
+          gutterBottom 
+          sx={{ 
+            color: theme.palette.text.secondary,
+            mb: 3
+          }}
+        >
+          How important is this value to you?
+        </Typography>
+        <LinearProgress 
+          variant="determinate" 
+          value={progress} 
+          sx={{ 
+            height: 8, 
+            borderRadius: 4,
+            backgroundColor: theme.palette.background.paper,
+            '& .MuiLinearProgress-bar': {
+              background: `linear-gradient(45deg, ${theme.palette.primary.main} 30%, ${theme.palette.secondary.main} 90%)`,
+            }
+          }} 
+        />
+        <Typography 
+          variant="body2" 
+          sx={{ 
+            color: theme.palette.text.secondary,
+            mt: 1,
+            textAlign: 'right'
+          }}
+        >
+          {currentIndex + 1} of {values.length}
+        </Typography>
+      </Box>
+
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={currentIndex}
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          exit={{ opacity: 0, x: -20 }}
+          transition={{ duration: 0.3 }}
+        >
           <Paper 
-            key={value.id} 
             elevation={0} 
             sx={{ 
-              mb: 2, 
-              p: 2,
+              p: 4,
+              mb: 4,
               border: `1px solid ${theme.palette.divider}`,
-              transition: 'all 0.2s ease-in-out',
-              '&:hover': {
-                borderColor: theme.palette.primary.main,
-                transform: 'translateY(-2px)',
-              }
+              borderRadius: 4,
+              background: `linear-gradient(45deg, ${theme.palette.background.paper} 30%, ${theme.palette.background.default} 90%)`,
             }}
           >
-            <ListItem>
-              <ListItemText
-                primary={
-                  <Typography 
-                    variant="h6" 
-                    sx={{ 
-                      color: theme.palette.text.primary,
-                      mb: 1
-                    }}
-                  >
-                    {`${value.id}. ${value.name}`}
-                  </Typography>
-                }
-                secondary={
-                  <Typography 
-                    variant="body2" 
-                    sx={{ 
-                      color: theme.palette.text.secondary
-                    }}
-                  >
-                    {value.description}
-                  </Typography>
-                }
-              />
-              <RadioGroup
-                row
-                value={value.importance || ''}
-                onChange={(e) => onValueChange(value.id, e.target.value as 'V' | 'Q' | 'N' | null)}
+            <Typography 
+              variant="h4" 
+              sx={{ 
+                color: theme.palette.text.primary,
+                mb: 2
+              }}
+            >
+              {values[currentIndex].name}
+            </Typography>
+            <Typography 
+              variant="body1" 
+              sx={{ 
+                color: theme.palette.text.secondary,
+                mb: 4
+              }}
+            >
+              {values[currentIndex].description}
+            </Typography>
+
+            <Box sx={{ display: 'flex', justifyContent: 'center', gap: 2 }}>
+              <Button
+                variant="outlined"
+                size="large"
+                onClick={() => handleRating('N')}
                 sx={{
-                  '& .MuiFormControlLabel-label': {
-                    color: theme.palette.text.secondary,
+                  borderColor: theme.palette.text.secondary,
+                  color: theme.palette.text.secondary,
+                  '&:hover': {
+                    borderColor: theme.palette.error.main,
+                    color: theme.palette.error.main,
                   }
                 }}
               >
-                <FormControlLabel 
-                  value="V" 
-                  control={
-                    <Radio 
-                      sx={{
-                        color: theme.palette.primary.main,
-                        '&.Mui-checked': {
-                          color: theme.palette.primary.main,
-                        },
-                      }}
-                    />
-                  } 
-                  label="V" 
-                />
-                <FormControlLabel 
-                  value="Q" 
-                  control={
-                    <Radio 
-                      sx={{
-                        color: theme.palette.primary.main,
-                        '&.Mui-checked': {
-                          color: theme.palette.primary.main,
-                        },
-                      }}
-                    />
-                  } 
-                  label="Q" 
-                />
-                <FormControlLabel 
-                  value="N" 
-                  control={
-                    <Radio 
-                      sx={{
-                        color: theme.palette.primary.main,
-                        '&.Mui-checked': {
-                          color: theme.palette.primary.main,
-                        },
-                      }}
-                    />
-                  } 
-                  label="N" 
-                />
-              </RadioGroup>
-            </ListItem>
+                Not Important
+              </Button>
+              <Button
+                variant="outlined"
+                size="large"
+                onClick={() => handleRating('Q')}
+                sx={{
+                  borderColor: theme.palette.warning.main,
+                  color: theme.palette.warning.main,
+                  '&:hover': {
+                    borderColor: theme.palette.warning.dark,
+                    color: theme.palette.warning.dark,
+                  }
+                }}
+              >
+                Quite Important
+              </Button>
+              <Button
+                variant="outlined"
+                size="large"
+                onClick={() => handleRating('V')}
+                sx={{
+                  borderColor: theme.palette.success.main,
+                  color: theme.palette.success.main,
+                  '&:hover': {
+                    borderColor: theme.palette.success.dark,
+                    color: theme.palette.success.dark,
+                  }
+                }}
+              >
+                Very Important
+              </Button>
+            </Box>
           </Paper>
-        ))}
-      </List>
+        </motion.div>
+      </AnimatePresence>
 
-      <Box sx={{ mt: 4, display: 'flex', justifyContent: 'center' }}>
-        <Button
-          variant="contained"
-          color="primary"
-          size="large"
-          onClick={onComplete}
-          disabled={!allValuesRanked}
-          sx={{
-            background: `linear-gradient(45deg, ${theme.palette.primary.main} 30%, ${theme.palette.secondary.main} 90%)`,
-            boxShadow: '0 3px 5px 2px rgba(99, 102, 241, .3)',
-            '&:hover': {
-              background: `linear-gradient(45deg, ${theme.palette.primary.dark} 30%, ${theme.palette.secondary.dark} 90%)`,
-            },
-            '&.Mui-disabled': {
-              background: theme.palette.action.disabledBackground,
-            }
-          }}
-        >
-          View Results
-        </Button>
-      </Box>
+      {allValuesRanked && (
+        <Box sx={{ display: 'flex', justifyContent: 'center' }}>
+          <Button
+            variant="contained"
+            size="large"
+            onClick={onComplete}
+            sx={{
+              background: `linear-gradient(45deg, ${theme.palette.primary.main} 30%, ${theme.palette.secondary.main} 90%)`,
+              boxShadow: '0 3px 5px 2px rgba(99, 102, 241, .3)',
+              '&:hover': {
+                background: `linear-gradient(45deg, ${theme.palette.primary.dark} 30%, ${theme.palette.secondary.dark} 90%)`,
+              }
+            }}
+          >
+            View Results
+          </Button>
+        </Box>
+      )}
     </Box>
   );
 };
