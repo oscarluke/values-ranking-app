@@ -6,7 +6,6 @@ import {
   ListItem, 
   ListItemText,
   Paper,
-  Button,
   Divider,
   useTheme
 } from '@mui/material';
